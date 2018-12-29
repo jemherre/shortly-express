@@ -22,15 +22,15 @@ describe('', function() {
 
   var server;
 
-  // before(function() {
-  //   server = app.listen(4568, function() {
-  //     console.log('Shortly is listening on 4568');
-  //   });
-  // });
+// before(function() {
+//   server = app.listen(4568, function() {
+//     console.log('Shortly is listening on 4568');
+//   });
+// });
 
-  // after(function() {
-  //   server.close();
-  // });
+// after(function() {
+//   server.close();
+// });
 
   beforeEach(function() {
     // log out currently signed in user
@@ -175,7 +175,7 @@ describe('', function() {
           baseUrl: 'http://127.0.0.1:4568'
         });
         link.save().then(function() {
-          done();
+          // done();
         });
         // console.log('new link:',link);
       // });
@@ -231,6 +231,7 @@ describe('', function() {
 
     it('Redirects to login page if a user tries to access the main page and is not signed in', function(done) {
       request('http://127.0.0.1:4568/', function(error, res, body) {
+        console.log(res.req.path);
         expect(res.req.path).to.equal('/login');
         done();
       });

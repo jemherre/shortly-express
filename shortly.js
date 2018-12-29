@@ -25,14 +25,24 @@ app.use(express.static(__dirname + '/public'));
 
 
 app.get('/', 
-function(req, res) {
-  res.render('index');
-});
+  function(req, res) {
+    console.log('req  path:', req.path);
+    if(req.session) {
+      res.render('index');
+    } else {
+      req.path = '/login';  
+      res.render('login');
+    }
+  });
 
 app.get('/create', 
-function(req, res) {
-  res.render('index');
-});
+  function(req, res) {
+    if(req.session) {
+      res.render('index');
+    } else {
+      res.render('login');
+    }
+  });
 
 app.get('/links', 
 function(req, res) {
@@ -77,8 +87,61 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.post('/signup', function(res, req) {
+  //require - username, password
+  //check if username exists throw error with msg "Username already exists"
+  //if doesn't exist, input username into the database
+  var username = req.body.username;
 
+  // select * from `users` where `username` = username
+  new User({'username': username})
+  .fetch()
+  .then(function(model) {
+    if(model.get('username')){
+      throw error('Username already exists');
+    } else {
+      Users.create({
+        username: username,
+        password: req.body.password
+      })
+      .then(function(newUser) {
+        console.log('newUser>> ',newUser);
+        res.status(200).send(newUser);
+      });
+    }
+  });
+});
 
+app.get('/login', function(req, res){
+  var username = req.body.username;
+  var password = req.body.password;
+  //query select * FROM user WHERE 'username' = username
+  new User({'username': username}).fetch().then(function(user){
+    if(user){
+      //compare entered password with token salt and the saved password
+      //if token salt and same password match 
+      //redirect to main page
+      var tokenPassword = bcrypt.hash(password, user.get('token'));
+      bcrypt.compare(tokenPassword, user.get('password'), function(err, res){
+        if(res){
+          //redirect to the main page
+          req.session.regenerate(function(){
+            console.log('password matches');
+            //****  show the redirection icon before being re directed ***
+            res.redirect('/index');
+            req.session.user =  user.username;
+          });
+        } else {
+          console.log('password did not match');
+          res.redirect('/login');
+        }
+      });
+    } else {
+      console.log('User does not exist');
+      res.redirect('/signup');
+    }
+  });
+});
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
 // assume the route is a short code and try and handle it here.
