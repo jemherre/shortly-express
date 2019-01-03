@@ -24,170 +24,154 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
-// app.use(express.session());
+
+app.use(session({
+  secret: 'keyboard cat',
+  saveUninitialized: false,
+  resave: false
+}));
 
 /////////////
 //All routes below check to see if a user is logged in, if not then redirects the
 //user to the login
 
+
+
 app.get('/', 
   function(req, res) {
-    console.log( "req.session", req.session);
-    if(req.session) {
-      console.log('req  session:', req.path);
+    console.log( 'req.session', req.session);
+    if (req.session.user) {
+      next();
+      console.log('Active Session');
       res.render('index');
     } else {
       console.log('redirecting');
-      res.render('login');
+      res.redirect('login');
     }
   });
 
 app.get('/create', 
   function(req, res) {
-    if(req.session) {
+    if (req.session) {
       next();
       res.render('index');
     } else {
-      res.redirect(301,'login');
+      res.redirect(301, 'login');
     }
   }
-  );
+);
 
 app.get('/links', 
 //only allowed registered members
-function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.status(200).send(links.models);
-  });
-});
+  function(req, res) {
+    if (req.session) {
+      next();
+      Links.reset().fetch().then(function(links) {
+        res.status(200).send(links.models);
+      });
+    } else {
+      res.redirect('/login');
+    }
+  }
+);
 
 app.post('/links', 
-function(req, res) {
-  var uri = req.body.url;
+  function(req, res) {
+    var uri = req.body.url;
 
-  if (!util.isValidUrl(uri)) {
-    console.log('Not a valid url: ', uri);
-    return res.sendStatus(404);
-  }
-
-  new Link({ url: uri }).fetch().then(function(found) {
-    if (found) {
-      res.status(200).send(found.attributes);
-    } else {
-      util.getUrlTitle(uri, function(err, title) {
-        if (err) {
-          console.log('Error reading URL heading: ', err);
-          return res.sendStatus(404);
-        }
-
-        Links.create({
-          url: uri,
-          title: title,
-          baseUrl: req.headers.origin
-        })
-        .then(function(newLink) {
-          res.status(200).send(newLink);
-        });
-      });
+    if (!util.isValidUrl(uri)) {
+      console.log('Not a valid url: ', uri);
+      return res.sendStatus(404);
     }
+
+    new Link({ url: uri }).fetch().then(function(found) {
+      if (found) {
+        res.status(200).send(found.attributes);
+      } else {
+        util.getUrlTitle(uri, function(err, title) {
+          if (err) {
+            console.log('Error reading URL heading: ', err);
+            return res.sendStatus(404);
+          }
+
+          Links.create({
+            url: uri,
+            title: title,
+            baseUrl: req.headers.origin
+          })
+            .then(function(newLink) {
+              res.status(200).send(newLink);
+            });
+        });
+      }
+    });
   });
-});
 
 /************************************************************/
 // Authentication routes here - when a user has already been authenticated
 /************************************************************/
 
-<<<<<<< HEAD
-app.get('/login',
-function(req, res) {
-  if (req.session.loggedIn) {
-    res.redirect('/');
-  } else {
-    res.render('login');
-  }
-});
+// app.use(session({
+//   secret: 'keyboard cat',
+//   saveUninitialized: false,
+//   resave: true
+// }));
 
-
-app.post('/signup', function(res, req) {
-=======
 app.post('/signup', function(req, res) {
->>>>>>> 8a19a2d31ca549fb49cf61c865fe3c3025b48fa4
   //require - username, password
   //check if username exists throw error with msg "Username already exists"
   //if doesn't exist, input username into the database
-  //console.log('req body', req.body);
   var username = req.body.username;
   var password = req.body.password;
-  //console.log('username: ',username);
-
-  // select * from `users` where `username` = username
-  
-  // var check = user.get('username');
-  // console.log('C: ', check);
-  // if(check){
-    //   console.log('Username already exists');
-    //   // throw Error('Username already exists');
-    //   res.redirect('/');
-    // } else {
-      // Users.create({
-        //   username: username,
-        //   password: req.body.password
-        // })
-        // .then(function(user) {
-          //   console.log('newUser>> ',user);
-          
-          // var shasum = crypto.createHash('sha1');
-          // shasum.update(JSON.stringify(user.get('created_at')));
-          // var token = shasum.digest('hex').slice(0, 5);
-          // user.set('token', token );
-          
-  bcrypt.hash(password, 10, null, function (err, hash){
-    var newUser = new User({
-      'username': username,
-      'password': hash      
-    });
-    newUser.save()
-    .then(function(user) {
-        req.session.regenerate(function(){
-        req.session.user = newUser;
-        res.redirect('/');
-      });
-  //console.log('newUser>> ',user);
-    });
+  bcrypt.hash(password, null, null, function (err, hash) {
+    if (err) {
+      console.log('Hash error');
+      res.end();
+    } else {
+      var newUser = new User({username: username, password: hash});
+      console.log('new user >>>>>>>>', newUser);
+      newUser.save()
+        .then(function(user) {
+          console.log('user', user);
+          req.session.regenerate(function() {
+            req.session.user = newUser;
+            res.redirect('/');
+          });
+        });
+    }
   });
 });
 
-app.get('/login', function(req, res){
+app.post('/login', function(req, response) {
   var username = req.body.username;
   var password = req.body.password;
   //query select * FROM user WHERE 'username' = username
   //creates new User in database
+  console.log('LOGGING IN');
   new User({'username': username})
-  .fetch().then(function(user){
-    if(user){
+    .fetch().then(function(user) {
+      if (user) {
       //compare entered password with token salt and the saved password
-      //if token salt and same password match 
-      //redirect to main page
-      var tokenPassword = bcrypt.hash(password, user.get('token'));
-      bcrypt.compare(tokenPassword, user.get('password'), function(err, res){
-        if(res){
+        bcrypt.compare(password, user.get('password'), function(err, res) {
+          if (res) {
           //redirect to the main page
-          req.session.regenerate(function(){
-            console.log('password matches');
-            //****  show the redirection icon before being re directed ***
-            res.redirect('/index');
-            req.session.user =  user.username;
-          });
-        } else {
-          console.log('password did not match');
-          res.redirect('/login');
-        }
-      });
-    } else {
-      console.log('User does not exist');
-      res.redirect('/signup');
-    }
-  });
+            req.session.regenerate(function() {
+              console.log('password matches');
+              response.location('/');
+              console.log('response headers =-------->>>>> ', response.headers);
+              response.redirect('/');
+              req.session.user = user.username;
+            });
+          } else {
+            console.log('password did not match');
+            response.end('/login');
+          }
+        });
+      } else {
+        console.log('User does not exist');
+        response.end('/signup');
+      }
+    });
 });
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail

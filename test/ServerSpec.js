@@ -22,15 +22,15 @@ describe('', function() {
 
   var server;
 
-// before(function() {
-//   server = app.listen(4568, function() {
-//     console.log('Shortly is listening on 4568');
-//   });
-// });
+  // before(function() {
+  //   server = app.listen(4568, function() {
+  //     console.log('Shortly is listening on 4568');
+  //   });
+  // });
 
-// after(function() {
-//   server.close();
-// });
+  // after(function() {
+  //   server.close();
+  // });
 
   beforeEach(function() {
     // log out currently signed in user
@@ -53,10 +53,10 @@ describe('', function() {
       .del()
       .catch(function(error) {
         // uncomment when writing authentication tests
-        // throw {
-        //   type: 'DatabaseError',
-        //   message: 'Failed to create test setup data'
-        // };
+        throw {
+          type: 'DatabaseError',
+          message: 'Failed to create test setup data'
+        };
       });
 
     // delete user Phillip from db so it can be created later for the test
@@ -64,15 +64,15 @@ describe('', function() {
       .where('username', '=', 'Phillip')
       .del()
       .catch(function(error) {
-        // uncomment when writing authentication tests
-        // throw {
-        //   type: 'DatabaseError',
-        //   message: 'Failed to create test setup data'
-        // };
+        //uncomment when writing authentication tests
+        throw {
+          type: 'DatabaseError',
+          message: 'Failed to create test setup data'
+        };
       });
   });
 
-  describe('Link creation:', function() {
+  xdescribe('Link creation:', function() {
 
     var requestWithSession = request.defaults({jar: true});
 
@@ -133,7 +133,7 @@ describe('', function() {
         });
       });
 
-      it('New links create a database entry', function(done) {//test 3
+      it('New links create a database entry', function(done) { //test 3
         requestWithSession(options, function(error, res, body) {
           db.knex('urls')
             .where('url', '=', 'http://roflzoo.com/')
@@ -168,19 +168,19 @@ describe('', function() {
       // var link;
 
       // beforeEach(function(done) {
-        // save a link to the database
-        var link = new Link({
-          url: 'http://roflzoo.com/',
-          title: 'Funny pictures of animals, funny dog pictures',
-          baseUrl: 'http://127.0.0.1:4568'
-        });
-        link.save().then(function() {
-          // done();
-        });
-        // console.log('new link:',link);
+      // save a link to the database
+      var link = new Link({
+        url: 'http://roflzoo.com/',
+        title: 'Funny pictures of animals, funny dog pictures',
+        baseUrl: 'http://127.0.0.1:4568'
+      });
+      link.save().then(function() {
+        // done();
+      });
+      // console.log('new link:',link);
       // });
 
-      it('Returns the same shortened code', function(done) {  //test 5
+      it('Returns the same shortened code', function(done) { //test 5
         var options = {
           'method': 'POST',
           'followAllRedirects': true,
@@ -227,15 +227,10 @@ describe('', function() {
 
   }); // 'Link creation'
 
-  xdescribe('Privileged Access:', function() {
+  describe('Privileged Access:', function() {
 
     it('Redirects to login page if a user tries to access the main page and is not signed in', function(done) {
       request('http://127.0.0.1:4568/', function(error, res, body) {
-<<<<<<< HEAD
-        console.log('res.req.path', res.req.path);
-=======
-        console.log('res path: ',res);
->>>>>>> 8a19a2d31ca549fb49cf61c865fe3c3025b48fa4
         expect(res.req.path).to.equal('/login');
         done();
       });
