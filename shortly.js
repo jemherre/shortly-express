@@ -11,6 +11,8 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
+var bcrypt = require('bcrypt-nodejs');
+var crypto = require('crypto');
 
 var app = express();
 
@@ -22,15 +24,20 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+// app.use(express.session());
 
+/////////////
+//All routes below check to see if a user is logged in, if not then redirects the
+//user to the login
 
 app.get('/', 
   function(req, res) {
-    console.log('req  path:', req.path);
+    console.log( "req.session", req.session);
     if(req.session) {
+      console.log('req  session:', req.path);
       res.render('index');
     } else {
-      req.path = '/login';  
+      console.log('redirecting');
       res.render('login');
     }
   });
@@ -38,13 +45,16 @@ app.get('/',
 app.get('/create', 
   function(req, res) {
     if(req.session) {
+      next();
       res.render('index');
     } else {
-      res.render('login');
+      res.redirect(301,'login');
     }
-  });
+  }
+  );
 
 app.get('/links', 
+//only allowed registered members
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.status(200).send(links.models);
@@ -84,9 +94,10 @@ function(req, res) {
 });
 
 /************************************************************/
-// Write your authentication routes here
+// Authentication routes here - when a user has already been authenticated
 /************************************************************/
 
+<<<<<<< HEAD
 app.get('/login',
 function(req, res) {
   if (req.session.loggedIn) {
@@ -98,27 +109,51 @@ function(req, res) {
 
 
 app.post('/signup', function(res, req) {
+=======
+app.post('/signup', function(req, res) {
+>>>>>>> 8a19a2d31ca549fb49cf61c865fe3c3025b48fa4
   //require - username, password
   //check if username exists throw error with msg "Username already exists"
   //if doesn't exist, input username into the database
+  //console.log('req body', req.body);
   var username = req.body.username;
+  var password = req.body.password;
+  //console.log('username: ',username);
 
   // select * from `users` where `username` = username
-  new User({'username': username})
-  .fetch()
-  .then(function(model) {
-    if(model.get('username')){
-      throw error('Username already exists');
-    } else {
-      Users.create({
-        username: username,
-        password: req.body.password
-      })
-      .then(function(newUser) {
-        console.log('newUser>> ',newUser);
-        res.status(200).send(newUser);
+  
+  // var check = user.get('username');
+  // console.log('C: ', check);
+  // if(check){
+    //   console.log('Username already exists');
+    //   // throw Error('Username already exists');
+    //   res.redirect('/');
+    // } else {
+      // Users.create({
+        //   username: username,
+        //   password: req.body.password
+        // })
+        // .then(function(user) {
+          //   console.log('newUser>> ',user);
+          
+          // var shasum = crypto.createHash('sha1');
+          // shasum.update(JSON.stringify(user.get('created_at')));
+          // var token = shasum.digest('hex').slice(0, 5);
+          // user.set('token', token );
+          
+  bcrypt.hash(password, 10, null, function (err, hash){
+    var newUser = new User({
+      'username': username,
+      'password': hash      
+    });
+    newUser.save()
+    .then(function(user) {
+        req.session.regenerate(function(){
+        req.session.user = newUser;
+        res.redirect('/');
       });
-    }
+  //console.log('newUser>> ',user);
+    });
   });
 });
 

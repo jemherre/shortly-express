@@ -15,6 +15,7 @@ var User = db.Model.extend({
       var token = shasum.digest('hex').slice(0, 5);
       model.set('token', token );
       bcrypt.hash(password, token).then(function (hash){
+        console.log('pass: ',password,' token: ',token,' hash:',hash);
         model.set('password', hash);
       });
     })
