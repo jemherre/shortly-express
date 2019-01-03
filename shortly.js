@@ -87,6 +87,16 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/login',
+function(req, res) {
+  if (req.session.loggedIn) {
+    res.redirect('/');
+  } else {
+    res.render('login');
+  }
+});
+
+
 app.post('/signup', function(res, req) {
   //require - username, password
   //check if username exists throw error with msg "Username already exists"
@@ -116,7 +126,9 @@ app.get('/login', function(req, res){
   var username = req.body.username;
   var password = req.body.password;
   //query select * FROM user WHERE 'username' = username
-  new User({'username': username}).fetch().then(function(user){
+  //creates new User in database
+  new User({'username': username})
+  .fetch().then(function(user){
     if(user){
       //compare entered password with token salt and the saved password
       //if token salt and same password match 
