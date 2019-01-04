@@ -41,22 +41,20 @@ app.get('/',
   function(req, res) {
     console.log( 'req.session', req.session);
     if (req.session.user) {
-      next();
       console.log('Active Session');
       res.render('index');
     } else {
       console.log('redirecting');
-      res.redirect('login');
+      res.redirect('/login');
     }
   });
 
 app.get('/create', 
   function(req, res) {
-    if (req.session) {
-      next();
+    if (req.session.user) {
       res.render('index');
     } else {
-      res.redirect(301, 'login');
+      res.redirect('/login');
     }
   }
 );
@@ -64,8 +62,8 @@ app.get('/create',
 app.get('/links', 
 //only allowed registered members
   function(req, res) {
-    if (req.session) {
-      next();
+    if (req.session.user) {
+      // next();
       Links.reset().fetch().then(function(links) {
         res.status(200).send(links.models);
       });
@@ -78,7 +76,6 @@ app.get('/links',
 app.post('/links', 
   function(req, res) {
     var uri = req.body.url;
-
     if (!util.isValidUrl(uri)) {
       console.log('Not a valid url: ', uri);
       return res.sendStatus(404);
@@ -93,7 +90,6 @@ app.post('/links',
             console.log('Error reading URL heading: ', err);
             return res.sendStatus(404);
           }
-
           Links.create({
             url: uri,
             title: title,
@@ -116,6 +112,10 @@ app.post('/links',
 //   saveUninitialized: false,
 //   resave: true
 // }));
+
+app.get('/login', function (req, res) {
+  res.render('login');  
+});
 
 app.post('/signup', function(req, res) {
   //require - username, password
@@ -157,10 +157,10 @@ app.post('/login', function(req, response) {
           //redirect to the main page
             req.session.regenerate(function() {
               console.log('password matches');
-              response.location('/');
+              response.location('/login');
               console.log('response headers =-------->>>>> ', response.headers);
-              response.redirect('/');
-              req.session.user = user.username;
+              response.redirect('back');
+              req.session.user = user.get('username');
             });
           } else {
             console.log('password did not match');
@@ -169,7 +169,7 @@ app.post('/login', function(req, response) {
         });
       } else {
         console.log('User does not exist');
-        response.end('/signup');
+        response.redirect('/login');
       }
     });
 });

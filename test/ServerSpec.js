@@ -165,20 +165,20 @@ describe('', function() {
 
     describe('With previously saved urls:', function() {
 
-      // var link;
+      var link;
 
-      // beforeEach(function(done) {
-      // save a link to the database
-      var link = new Link({
-        url: 'http://roflzoo.com/',
-        title: 'Funny pictures of animals, funny dog pictures',
-        baseUrl: 'http://127.0.0.1:4568'
-      });
-      link.save().then(function() {
-        // done();
-      });
+      beforeEach(function(done) {
+      //save a link to the database
+        var link = new Link({
+          url: 'http://roflzoo.com/',
+          title: 'Funny pictures of animals, funny dog pictures',
+          baseUrl: 'http://127.0.0.1:4568'
+        });
+        link.save().then(function() {
+          done();
+        });
       // console.log('new link:',link);
-      // });
+      });
 
       it('Returns the same shortened code', function(done) { //test 5
         var options = {
@@ -210,7 +210,8 @@ describe('', function() {
         });
       });
 
-      it('Returns all of the links to display on the links page', function(done) {
+      it('Returns all of the links to display on the links page', function(done) { //failing
+
         var options = {
           'method': 'GET',
           'uri': 'http://127.0.0.1:4568/links'
@@ -230,7 +231,7 @@ describe('', function() {
   describe('Privileged Access:', function() {
 
     it('Redirects to login page if a user tries to access the main page and is not signed in', function(done) {
-      request('http://127.0.0.1:4568/', function(error, res, body) {
+      request('http://127.0.0.1:4568/', function(error, res, body) { //console.log('res ------------>', res.req.path);
         expect(res.req.path).to.equal('/login');
         done();
       });
