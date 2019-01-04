@@ -181,7 +181,6 @@ app.post('/login', function(req, response) {
               console.log('response headers =-------->>>>> ', response.headers);
               req.session.user = user.get('username');
               response.redirect('/');
-              console.log('USER: ',req.session.user);
             });
           } else {
             console.log('password did not match');
