@@ -125,6 +125,7 @@ app.get('/login', function (req, res) {
 app.get('/logout', 
   function(req, res) {
     //end session
+    console.log('TEST LOGOUT');
     req.session.destroy( function(err) {
       if (err) {
         console.log('Error in Logging out');

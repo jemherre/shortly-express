@@ -348,4 +348,65 @@ describe('', function() {
 
   }); // 'Account Login'
 
+  //test logout function
+
+  describe ('Logout existing users', function() {
+   
+    var requestWithSession = request.defaults({jar: true});
+
+    beforeEach(function(done) {
+      new User({
+        'username': 'Clifton',
+        'password': 'Clifton'
+      }).save().then(function() {
+        done();
+      });
+    });
+
+    it('Logs out existing users', function(done) {
+      var options = {
+        'method': 'GET',
+        'uri': 'http://127.0.0.1:4568/logout'
+      };
+
+      requestWithSession(options, function(error, res, body) {
+        expect(res.req.path).to.equal('/login');
+        done();
+      });
+    });
+  });
+
+  //test get signup and login
+  describe ('Render index after signup', function() {
+   
+    var requestWithSession = request.defaults({jar: true});
+
+    it('test if successfully rendered sign up page', function(done) {
+      var options = {
+        'method': 'GET',
+        'uri': 'http://127.0.0.1:4568/signup'
+      };
+
+      requestWithSession(options, function(error, res, body) {
+        expect(res.req.path).to.equal('/signup');
+        done();
+      });
+    });
+
+    it('test if successfully rendered login page', function(done) {
+      var options = {
+        'method': 'GET',
+        'uri': 'http://127.0.0.1:4568/login'
+      };
+
+      requestWithSession(options, function(error, res, body) {
+        expect(res.req.path).to.equal('/login');
+        done();
+      });
+    });
+  });
+  
+  
+
+
 });
