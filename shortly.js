@@ -28,7 +28,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(session({
   secret: 'keyboard cat',
   saveUninitialized: false,
-  resave: false
+  resave: true
 }));
 
 /////////////
@@ -120,6 +120,23 @@ app.get('/login', function (req, res) {
   res.render('login');  
 });
 
+//app logout
+//Get
+app.get('/logout', 
+  function(req, res) {
+    //end session
+    req.session.destroy( function(err) {
+      if (err) {
+        console.log('Error in Logging out');
+      } else {
+        //redirect to login
+        res.redirect('/login');
+        console.log('You have successfully logged out');
+      }
+    });
+  }
+);
+
 app.post('/signup', function(req, res) {
   //require - username, password
   //check if username exists throw error with msg "Username already exists"
@@ -160,10 +177,11 @@ app.post('/login', function(req, response) {
           //redirect to the main page
             req.session.regenerate(function() {
               console.log('password matches');
-              response.location('/login');
+              response.location('/');
               console.log('response headers =-------->>>>> ', response.headers);
-              response.redirect('back');
               req.session.user = user.get('username');
+              response.redirect('/');
+              console.log('USER: ',req.session.user);
             });
           } else {
             console.log('password did not match');
